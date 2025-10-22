@@ -1,4 +1,4 @@
-"use client";
+
 import { SidebarNav } from "@/components/sidebar-nav";
 import { VersionTimeline } from "@/components/version-timeline";
 import { VersionDetails } from "@/components/version-details";
