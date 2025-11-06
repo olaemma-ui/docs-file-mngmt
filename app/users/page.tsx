@@ -1,19 +1,19 @@
-"use client"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { Plus, MoreVertical, Mail, Shield } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+"use client";
+import { SidebarNav } from "@/components/sidebar-nav";
+import { Plus, MoreVertical, Mail, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface User {
-  id: string
-  name: string
-  email: string
-  role: "Admin" | "Editor" | "Viewer"
-  status: "Active" | "Inactive"
-  joinDate: string
-  avatar: string
+  id: string;
+  name: string;
+  email: string;
+  role: "Admin" | "Editor" | "Viewer";
+  status: "Active" | "Inactive";
+  joinDate: string;
+  avatar: string;
 }
 
 const users: User[] = [
@@ -62,13 +62,13 @@ const users: User[] = [
     joinDate: "May 12, 2024",
     avatar: "/placeholder-user.jpg",
   },
-]
+];
 
 const roleColors = {
   Admin: "bg-red-500/10 text-red-700",
   Editor: "bg-blue-500/10 text-blue-700",
   Viewer: "bg-gray-500/10 text-gray-700",
-}
+};
 
 export default function UsersPage() {
   return (
@@ -81,8 +81,12 @@ export default function UsersPage() {
           <div className="px-4 md:px-8 py-4 md:py-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl md:text-3xl font-mono font-semibold text-foreground">Users</h1>
-                <p className="text-sm text-muted-foreground mt-1">Manage team members and permissions</p>
+                <h1 className="text-2xl md:text-3xl font-mono font-semibold text-foreground">
+                  Users
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Manage team members and permissions
+                </p>
               </div>
               <Button className="gap-2 bg-accent hover:bg-accent/90">
                 <Plus className="w-4 h-4" />
@@ -108,14 +112,21 @@ export default function UsersPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 flex-1">
                     <Avatar>
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                      <AvatarImage
+                        src={user.avatar || "/placeholder.svg"}
+                        alt={user.name}
+                      />
                       <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <h3 className="font-mono font-semibold text-foreground">{user.name}</h3>
+                      <h3 className="font-mono font-semibold text-foreground">
+                        {user.name}
+                      </h3>
                       <div className="flex items-center gap-2 mt-1">
                         <Mail className="w-4 h-4 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {user.email}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -125,8 +136,16 @@ export default function UsersPage() {
                       <Shield className="w-3 h-3 mr-1" />
                       {user.role}
                     </Badge>
-                    <Badge variant={user.status === "Active" ? "default" : "secondary"}>{user.status}</Badge>
-                    <span className="text-sm text-muted-foreground">{user.joinDate}</span>
+                    <Badge
+                      variant={
+                        user.status === "Active" ? "default" : "secondary"
+                      }
+                    >
+                      {user.status}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {user.joinDate}
+                    </span>
                     <button className="p-2 rounded-lg hover:bg-muted transition-colors opacity-0 group-hover:opacity-100">
                       <MoreVertical className="w-4 h-4 text-muted-foreground" />
                     </button>
@@ -138,5 +157,5 @@ export default function UsersPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

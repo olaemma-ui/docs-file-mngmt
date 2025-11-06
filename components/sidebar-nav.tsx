@@ -41,7 +41,7 @@ const navSections: NavSection[] = [
       { label: "Documents", href: "/documents", icon: <FileText className="w-5 h-5" /> },
       { label: "Folders", href: "/folders", icon: <Folder className="w-5 h-5" /> },
       { label: "Search", href: "/search", icon: <Search className="w-5 h-5" /> },
-      { label: "Analytics", href: "/analytics", icon: <BarChart3 className="w-5 h-5" /> },
+      // { label: "Analytics", href: "/analytics", icon: <BarChart3 className="w-5 h-5" /> },
     ],
   },
   {
@@ -53,8 +53,8 @@ const navSections: NavSection[] = [
     items: [
       { label: "User Management", href: "/admin/users", icon: <Users className="w-5 h-5" /> },
       { label: "Roles", href: "/admin/roles", icon: <Shield className="w-5 h-5" /> },
-      { label: "Permissions", href: "/admin/permissions", icon: <Lock className="w-5 h-5" /> },
-      { label: "Access Control", href: "/admin/access-control", icon: <Lock className="w-5 h-5" /> },
+      // { label: "Permissions", href: "/admin/permissions", icon: <Lock className="w-5 h-5" /> },
+      // { label: "Access Control", href: "/admin/access-control", icon: <Lock className="w-5 h-5" /> },
       { label: "Audit Logs", href: "/admin/audit-logs", icon: <Clock className="w-5 h-5" /> },
     ],
   },
