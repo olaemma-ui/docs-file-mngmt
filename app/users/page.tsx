@@ -1,76 +1,29 @@
 "use client";
+
+import { useEffect } from "react";
 import { SidebarNav } from "@/components/sidebar-nav";
-import { Plus, MoreVertical, Mail, Shield } from "lucide-react";
+import { Plus, MoreVertical, Mail, Shield, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useUsersStore } from "../admin/users/store/users.store";
+import { AccountStatus } from "@/core/enums/users.enums";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "Admin" | "Editor" | "Viewer";
-  status: "Active" | "Inactive";
-  joinDate: string;
-  avatar: string;
-}
 
-const users: User[] = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    role: "Admin",
-    status: "Active",
-    joinDate: "Jan 15, 2024",
-    avatar: "/placeholder-user.jpg",
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    email: "michael@example.com",
-    role: "Editor",
-    status: "Active",
-    joinDate: "Feb 20, 2024",
-    avatar: "/placeholder-user.jpg",
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    email: "emily@example.com",
-    role: "Editor",
-    status: "Active",
-    joinDate: "Mar 10, 2024",
-    avatar: "/placeholder-user.jpg",
-  },
-  {
-    id: "4",
-    name: "James Wilson",
-    email: "james@example.com",
-    role: "Viewer",
-    status: "Inactive",
-    joinDate: "Apr 5, 2024",
-    avatar: "/placeholder-user.jpg",
-  },
-  {
-    id: "5",
-    name: "Lisa Anderson",
-    email: "lisa@example.com",
-    role: "Editor",
-    status: "Active",
-    joinDate: "May 12, 2024",
-    avatar: "/placeholder-user.jpg",
-  },
-];
-
-const roleColors = {
+const roleColors: Record<string, string> = {
   Admin: "bg-red-500/10 text-red-700",
   Editor: "bg-blue-500/10 text-blue-700",
   Viewer: "bg-gray-500/10 text-gray-700",
 };
 
 export default function UsersPage() {
+  const { users, loading, error, listUsers } = useUsersStore();
+
+  useEffect(() => {
+    listUsers();
+  }, [listUsers]);
+
   return (
     <div className="flex min-h-screen bg-background">
       <SidebarNav />
@@ -98,62 +51,83 @@ export default function UsersPage() {
 
         {/* Content */}
         <div className="p-4 md:p-8">
-          <div className="space-y-3">
-            {users.map((user, index) => (
-              <Card
-                key={user.id}
-                className="p-4 hover:border-accent/50 transition-all group"
-                style={{
-                  animation: `fadeInUp 0.5s ease-out`,
-                  animationDelay: `${index * 50}ms`,
-                  animationFillMode: "both",
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 flex-1">
-                    <Avatar>
-                      <AvatarImage
-                        src={user.avatar || "/placeholder.svg"}
-                        alt={user.name}
-                      />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-mono font-semibold text-foreground">
-                        {user.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          {user.email}
-                        </p>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">
+                Loading users...
+              </span>
+            </div>
+          ) : error ? (
+            <div className="text-center text-red-500 py-20">
+              Failed to load users: {error}
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center text-muted-foreground py-20">
+              No users found.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {users.map((user, index) => (
+                <Card
+                  key={user.id}
+                  className="p-4 hover:border-accent/50 transition-all group"
+                  style={{
+                    animation: `fadeInUp 0.5s ease-out`,
+                    animationDelay: `${index * 50}ms`,
+                    animationFillMode: "both",
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 flex-1">
+                      <Avatar>
+                        <AvatarFallback>
+                          {user.fullName?.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-mono font-semibold text-foreground">
+                          {user.fullName}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-3">
-                    <Badge className={roleColors[user.role]}>
-                      <Shield className="w-3 h-3 mr-1" />
-                      {user.role}
-                    </Badge>
-                    <Badge
-                      variant={
-                        user.status === "Active" ? "default" : "secondary"
-                      }
-                    >
-                      {user.status}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {user.joinDate}
-                    </span>
-                    <button className="p-2 rounded-lg hover:bg-muted transition-colors opacity-0 group-hover:opacity-100">
-                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        className={
+                          roleColors[user.role || "Viewer"] ||
+                          "bg-gray-500/10 text-gray-700"
+                        }
+                      >
+                        <Shield className="w-3 h-3 mr-1" />
+                        {user.role || "Viewer"}
+                      </Badge>
+                      <Badge
+                        variant={
+                          user.status === AccountStatus.ACTIVE ? "default" : "secondary"
+                        }
+                      >
+                        {user.status ?? "--"}
+                      </Badge>
+                      {/* <span className="text-sm text-muted-foreground">
+                        {new Date(user.createdAt || "").toLocaleDateString() ||
+                          "—"}
+                      </span> */}
+                      <button className="p-2 rounded-lg hover:bg-muted transition-colors opacity-0 group-hover:opacity-100">
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

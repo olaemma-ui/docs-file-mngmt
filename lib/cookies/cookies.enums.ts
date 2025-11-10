@@ -9,3 +9,10 @@ export enum CookieKeys {
 
     THEME = 'theme',
 }
+
+
+
+export enum ZustandKey {
+    AUTH_DATA = 'auth-storage',
+    FOLDER_DATA = 'folder-storage',
+}

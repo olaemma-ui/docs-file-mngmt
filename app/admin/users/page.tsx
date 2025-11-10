@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react";
+import { SidebarNav } from "@/components/sidebar-nav";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Plus,
@@ -18,208 +18,161 @@ import {
   Edit,
   Lock,
   Unlock,
-} from "lucide-react"
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { AddUserModal } from "@/components/modals/add-user-modal"
-import { UserDetailsModal } from "@/components/modals/user-details-modal"
-
-interface User {
-  id: string
-  email: string
-  name: string
-  role: "admin" | "editor" | "viewer"
-  status: "active" | "inactive" | "pending"
-  joinDate: string
-  lastActive: string
-  isBlacklisted: boolean
-  isWhitelisted: boolean
-}
-
-const mockUsers: User[] = [
-  {
-    id: "1",
-    email: "admin@company.com",
-    name: "Admin User",
-    role: "admin",
-    status: "active",
-    joinDate: "2024-01-15",
-    lastActive: "2 minutes ago",
-    isBlacklisted: false,
-    isWhitelisted: true,
-  },
-  {
-    id: "2",
-    email: "editor@company.com",
-    name: "Editor User",
-    role: "editor",
-    status: "active",
-    joinDate: "2024-02-20",
-    lastActive: "1 hour ago",
-    isBlacklisted: false,
-    isWhitelisted: true,
-  },
-  {
-    id: "3",
-    email: "viewer@company.com",
-    name: "Viewer User",
-    role: "viewer",
-    status: "pending",
-    joinDate: "2024-03-10",
-    lastActive: "Never",
-    isBlacklisted: false,
-    isWhitelisted: false,
-  },
-  {
-    id: "4",
-    email: "blocked@company.com",
-    name: "Blocked User",
-    role: "viewer",
-    status: "inactive",
-    joinDate: "2024-01-05",
-    lastActive: "30 days ago",
-    isBlacklisted: true,
-    isWhitelisted: false,
-  },
-]
+} from "@/components/ui/dropdown-menu";
+import { AddUserModal } from "@/components/modals/add-user-modal";
+import { UserDetailsModal } from "@/components/modals/user-details-modal";
+import { toast } from "sonner";
+import { useUsersStore } from "./store/users.store";
+import { AccountStatus, UserRoles } from "@/core/enums/users.enums";
+import { CreateUserPayload } from "./dto/create-user.dto";
 
 const roleColors = {
-  admin: "bg-red-500/10 text-red-700 dark:text-red-400",
-  editor: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  viewer: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
-}
+  [UserRoles.SUPER_ADMIN]: "bg-red-500/10 text-red-700 dark:text-red-400",
+  [UserRoles.ADMIN]: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  [UserRoles.USER]: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
+};
 
 const statusColors = {
-  active: "bg-green-500/10 text-green-700 dark:text-green-400",
-  inactive: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
-  pending: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
-}
+  [AccountStatus.ACTIVE]: "bg-green-500/10 text-green-700 dark:text-green-400",
+  [AccountStatus.BLACKLISTED]:
+    "bg-gray-500/10 text-gray-700 dark:text-gray-400",
+  [AccountStatus.PENDING]:
+    "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+};
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false)
-  const [filterRole, setFilterRole] = useState<string>("all")
-  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const {
+    users,
+    loading,
+    creating,
+    updating,
+    deleting,
+    listUsers,
+    createUser,
+    updateUser,
+    deleteUser,
+  } = useUsersStore();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false);
+  const [filterRole, setFilterRole] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  // ✅ Fetch users on mount
+  useEffect(() => {
+    listUsers({
+      page: 1,
+      limit: 20,
+    }).catch(() => {
+      toast.error("Failed to fetch users");
+    });
+  }, [listUsers]);
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRole = filterRole === "all" || user.role === filterRole
-    const matchesStatus = filterStatus === "all" || user.status === filterStatus
-    return matchesSearch && matchesRole && matchesStatus
-  })
+      user.fullName?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = filterRole === "all" || user.role === filterRole;
+    const matchesStatus =
+      filterStatus === "all" || user.status === filterStatus;
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
-  const handleAddUser = (email: string, name: string, role: string) => {
-    const newUser: User = {
-      id: String(users.length + 1),
-      email,
-      name,
-      role: role as "admin" | "editor" | "viewer",
-      status: "pending",
-      joinDate: new Date().toISOString().split("T")[0],
-      lastActive: "Never",
-      isBlacklisted: false,
-      isWhitelisted: false,
+  // ✅ Handle creating user via API
+  const handleAddUser = async (user: CreateUserPayload) => {
+    console.log({ user });
+    const result = await createUser(user);
+    if (!result?.hasError) {
+      toast.success("User created successfully");
+      setIsAddUserModalOpen(false);
+    } else {
+      toast.error(result?.message ?? "Failed to create user");
     }
-    setUsers([...users, newUser])
-    setIsAddUserModalOpen(false)
-  }
+  };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter((u) => u.id !== userId))
-  }
+  // ✅ Handle delete
+  const handleDeleteUser = async (id: string) => {
+    // const result = await deleteUser(id);
+    // if (result?.success) toast.success("User deleted");
+    // else toast.error(result?.message ?? "Failed to delete user");
+  };
 
-  const handleToggleBlacklist = (userId: string) => {
-    setUsers(users.map((u) => (u.id === userId ? { ...u, isBlacklisted: !u.isBlacklisted } : u)))
-  }
-
-  const handleToggleWhitelist = (userId: string) => {
-    setUsers(users.map((u) => (u.id === userId ? { ...u, isWhitelisted: !u.isWhitelisted } : u)))
-  }
+  // ✅ Handle update (edit modal)
+  const handleUpdateUser = async (id: string, payload: Record<string, any>) => {
+    // const result = await updateUser(id, payload);
+    // if (result?.success) toast.success("User updated");
+    // else toast.error(result?.message ?? "Failed to update user");
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
-      <SidebarNav />
-
       <main className="flex-1 md:ml-64 transition-all duration-300">
         {/* Header */}
         <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="px-4 md:px-8 py-4 md:py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-mono font-semibold text-foreground">User Management</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Manage users, roles, permissions, and access control
-                </p>
-              </div>
-              <Button
-                onClick={() => setIsAddUserModalOpen(true)}
-                className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
-              >
-                <Plus className="w-4 h-4" />
-                Add User
-              </Button>
+          <div className="px-4 md:px-8 py-4 md:py-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-mono font-semibold text-foreground">
+                User Management
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage users, roles, permissions, and access control
+              </p>
             </div>
+            <Button
+              onClick={() => setIsAddUserModalOpen(true)}
+              className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+              disabled={creating}
+            >
+              <Plus className="w-4 h-4" />
+              Add User
+            </Button>
           </div>
         </header>
 
-        {/* Content */}
+        {/* Main Content */}
         <div className="p-4 md:p-8 space-y-6">
-          {/* Stats Cards */}
+          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="p-4 border border-border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-2xl font-mono font-semibold mt-1">{users.length}</p>
-                </div>
-                <Shield className="w-8 h-8 text-accent/50" />
-              </div>
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">Total Users</p>
+              <p className="text-2xl font-mono font-semibold mt-1">
+                {users.length}
+              </p>
             </Card>
-            <Card className="p-4 border border-border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Users</p>
-                  <p className="text-2xl font-mono font-semibold mt-1">
-                    {users.filter((u) => u.status === "active").length}
-                  </p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-500/50" />
-              </div>
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">Active</p>
+              <p className="text-2xl font-mono font-semibold mt-1">
+                {users.filter((u) => u.status === AccountStatus.ACTIVE).length}
+              </p>
             </Card>
-            <Card className="p-4 border border-border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Blacklisted</p>
-                  <p className="text-2xl font-mono font-semibold mt-1">{users.filter((u) => u.isBlacklisted).length}</p>
-                </div>
-                <AlertCircle className="w-8 h-8 text-red-500/50" />
-              </div>
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">Pending</p>
+              <p className="text-2xl font-mono font-semibold mt-1">
+                {users.filter((u) => u.status === AccountStatus.PENDING).length}
+              </p>
             </Card>
-            <Card className="p-4 border border-border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-mono font-semibold mt-1">
-                    {users.filter((u) => u.status === "pending").length}
-                  </p>
-                </div>
-                <Clock className="w-8 h-8 text-yellow-500/50" />
-              </div>
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">Blacklisted</p>
+              <p className="text-2xl font-mono font-semibold mt-1">
+                {
+                  users.filter((u) => u.status === AccountStatus.BLACKLISTED)
+                    .length
+                }
+              </p>
             </Card>
           </div>
 
-          {/* Filters and Search */}
-          <Card className="p-4 border border-border">
+          {/* Search & Filters */}
+          <Card className="p-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
                 <Search className="w-4 h-4 text-muted-foreground" />
@@ -231,201 +184,150 @@ export default function UsersPage() {
                 />
               </div>
               <div className="flex gap-2 flex-wrap">
-                <div className="flex gap-2">
+                {[UserRoles.ADMIN, UserRoles.USER].map((r) => (
                   <Button
-                    variant={filterRole === "all" ? "default" : "outline"}
+                    key={r}
+                    variant={filterRole === r ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setFilterRole("all")}
+                    onClick={() => setFilterRole(r)}
                   >
-                    All Roles
+                    {r}
                   </Button>
+                ))}
+                {["all", "active", "pending"].map((s) => (
                   <Button
-                    variant={filterRole === "admin" ? "default" : "outline"}
+                    key={s}
+                    variant={filterStatus === s ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setFilterRole("admin")}
+                    onClick={() => setFilterStatus(s)}
                   >
-                    Admin
+                    {s === "all"
+                      ? "All Status"
+                      : s.charAt(0).toUpperCase() + s.slice(1)}
                   </Button>
-                  <Button
-                    variant={filterRole === "editor" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilterRole("editor")}
-                  >
-                    Editor
-                  </Button>
-                  <Button
-                    variant={filterRole === "viewer" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilterRole("viewer")}
-                  >
-                    Viewer
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={filterStatus === "all" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilterStatus("all")}
-                  >
-                    All Status
-                  </Button>
-                  <Button
-                    variant={filterStatus === "active" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilterStatus("active")}
-                  >
-                    Active
-                  </Button>
-                  <Button
-                    variant={filterStatus === "pending" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilterStatus("pending")}
-                  >
-                    Pending
-                  </Button>
-                </div>
+                ))}
               </div>
             </div>
           </Card>
 
-          {/* Users Table */}
+          {/* Table */}
           <Card className="border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">User</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Role</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Join Date</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Last Active</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Access</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Actions</th>
+                    <th className="px-6 py-3 text-left">User</th>
+                    <th className="px-6 py-3 text-left">Role</th>
+                    <th className="px-6 py-3 text-left">Status</th>
+                    <th className="px-6 py-3 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium text-foreground">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge className={`${roleColors[user.role]} border-0`}>
-                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge className={`${statusColors[user.status]} border-0`}>
-                          {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">{user.joinDate}</td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">{user.lastActive}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          {user.isWhitelisted && (
-                            <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-0 text-xs">
-                              Whitelisted
-                            </Badge>
-                          )}
-                          {user.isBlacklisted && (
-                            <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-0 text-xs">
-                              Blacklisted
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedUser(user)
-                                setIsUserDetailsModalOpen(true)
-                              }}
-                            >
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit User
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleToggleWhitelist(user.id)}>
-                              {user.isWhitelisted ? (
-                                <>
-                                  <Unlock className="w-4 h-4 mr-2" />
-                                  Remove from Whitelist
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle className="w-4 h-4 mr-2" />
-                                  Add to Whitelist
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleToggleBlacklist(user.id)}>
-                              {user.isBlacklisted ? (
-                                <>
-                                  <Unlock className="w-4 h-4 mr-2" />
-                                  Remove from Blacklist
-                                </>
-                              ) : (
-                                <>
-                                  <Lock className="w-4 h-4 mr-2" />
-                                  Add to Blacklist
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDeleteUser(user.id)} className="text-destructive">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete User
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                  {loading ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        Loading users...
                       </td>
                     </tr>
-                  ))}
+                  ) : filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => (
+                      <tr
+                        key={user.id}
+                        className="border-b border-border hover:bg-muted/30"
+                      >
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-medium">{user.fullName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {user.email}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
+                            className={`${roleColors[user.role!]} border-0`}
+                          >
+                            {user.role ?? "-"}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
+                            className={`${statusColors[user.status!]} border-0`}
+                          >
+                            {user.status ?? "-"}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setIsUserDetailsModalOpen(true);
+                                }}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        No users found
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </Card>
-
-          {filteredUsers.length === 0 && (
-            <Card className="p-8 text-center border border-border">
-              <p className="text-muted-foreground">No users found matching your criteria</p>
-            </Card>
-          )}
         </div>
       </main>
 
       {/* Modals */}
       <AddUserModal
         isOpen={isAddUserModalOpen}
+        loading={creating}
         onClose={() => setIsAddUserModalOpen(false)}
         onAddUser={handleAddUser}
       />
+
       {selectedUser && (
         <UserDetailsModal
           isOpen={isUserDetailsModalOpen}
           onClose={() => {
-            setIsUserDetailsModalOpen(false)
-            setSelectedUser(null)
+            setIsUserDetailsModalOpen(false);
+            setSelectedUser(null);
           }}
           user={selectedUser}
-          onUpdateUser={(updatedUser) => {
-            setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)))
-            setIsUserDetailsModalOpen(false)
-            setSelectedUser(null)
-          }}
+          onUpdateUser={(updatedUser) =>
+            handleUpdateUser(updatedUser.id, updatedUser)
+          }
         />
       )}
     </div>
-  )
+  );
 }

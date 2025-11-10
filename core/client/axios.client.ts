@@ -1,7 +1,11 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError, AxiosResponse, AxiosProgressEvent } from "axios";
 
 import { IHttpClient } from "./http.client";
 import { Result } from "./result";
+import { useAuthStore } from "@/app/auth/store/auth.store";
+import { CookieKeys, ZustandKey } from "@/lib/cookies/cookies.enums";
+import { NextResponse } from "next/server";
+import { CookieManager } from "@/lib/cookies/cookie-manager";
 
 /**
  * AxiosHttpClient
@@ -27,6 +31,8 @@ export class AxiosHttpClient implements IHttpClient {
         });
 
         this.initializeInterceptors();
+
+        // console.log()
     }
 
     /**
@@ -36,14 +42,18 @@ export class AxiosHttpClient implements IHttpClient {
      * - 
      */
     private initializeInterceptors() {
-        
+
         // Request interceptor to add auth token
         this.axiosInstance.interceptors.request.use(
             (config) => {
-                const token = localStorage.getItem('auth_token');
+                const token = CookieManager.get({
+                    name: CookieKeys.ACCESS_TOKEN
+                });
+                console.log({ token })
                 if (token && config.headers) {
                     config.headers.Authorization = `Bearer ${token}`;
                 }
+
                 return config;
             },
             (error) => Promise.reject(error)
@@ -76,8 +86,27 @@ export class AxiosHttpClient implements IHttpClient {
      * Normalizes failed Axios responses into a Result<T>
      * - Prevents unhandled promise rejections
      * - Ensures the consumer always gets a safe Result
+     * - Redirects back to login if token expires
      */
     private handleError<T>(error: AxiosError): Result<T> {
+
+        let authData = localStorage.getItem(ZustandKey.AUTH_DATA);
+
+        if (
+            (error.response?.status === 401 &&
+                (error.response.data as any).message.toLowerCase().includes("token expired"))
+            || !authData
+        ) {
+            // Clear local storage and cookies
+            localStorage.removeItem(ZustandKey.AUTH_DATA);
+            CookieManager.delete({ name: CookieKeys.ACCESS_TOKEN });
+
+            // ✅ Redirect user to login page (frontend-safe)
+            if (typeof window !== "undefined") {
+                window.location.href = "/auth/login";
+            }
+        }
+
         return {
             hasError: true,
             message:
@@ -102,11 +131,12 @@ export class AxiosHttpClient implements IHttpClient {
 
     //  POST — send data (JSON or multipart/form-data)
     async post<T>(
-        { url, data, config }:
+        { url, data, config, onProgress }:
             {
                 url: string,
                 data?: FormData | Record<string, any>,
-                config?: AxiosRequestConfig
+                config?: AxiosRequestConfig,
+                onProgress?: (progress: number) => void;
             }): Promise<Result<T>> {
         try {
             // 🔹 Automatically switch header to multipart/form-data when sending FormData
@@ -117,6 +147,14 @@ export class AxiosHttpClient implements IHttpClient {
 
             const response = await this.axiosInstance.post(url, data, {
                 ...config,
+                onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+                    if (progressEvent.total) {
+                        const percentCompleted = Math.round(
+                            (progressEvent.loaded * 100) / progressEvent.total
+                        );
+                        onProgress?.(percentCompleted);
+                    }
+                },
                 headers: { ...headers, ...config?.headers },
             });
 

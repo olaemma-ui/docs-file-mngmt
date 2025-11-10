@@ -2,12 +2,11 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Mail, Lock, ArrowRight, Loader } from "lucide-react";
-import Link from "next/link";
 import { LoginDTO, LoginSchema } from "../dto/auth.dto";
 import { useAuthStore } from "../store/auth.store";
 import { useRouter } from "next/navigation";
@@ -28,16 +27,15 @@ export default function LoginPage() {
     console.log({ validate });
 
     if (validate.success) {
-      await login(field);
-      console.log({ isAuthenticated }, { error });
-      if (isAuthenticated && !error) {
-        router.push("/"); // Redirect to your dashboard or any protected page
-      }
+      await login(field, () => {
+        router.push("/");
+      });
+      console.log({ isAuthenticated, error });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-background to-secondary/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">

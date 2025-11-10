@@ -3,11 +3,11 @@ import { persist } from "zustand/middleware";
 import { IHttpClient } from "@/core/client/http.client";
 import { AuthService } from "../service/auth.service";
 import { AxiosHttpClient } from "@/core/client/axios.client";
-import { UserEntity } from "@/app/users/entities/user.entity";
-import { LoginDTO } from "../dto/auth.dto";
+import { UserEntity } from "@/app/admin/users/entities/user.entity";
+import { LoginDTO, VerifyInviteDTO } from "../dto/auth.dto";
 import { CookieManager } from "@/lib/cookies/cookie-manager";
-import { CookieKeys } from "@/lib/cookies/cookies.enums";
-    
+import { CookieKeys, ZustandKey } from "@/lib/cookies/cookies.enums";
+
 // 🧩 Create instance of your AuthService (you can inject http client later)
 const httpClient: IHttpClient = new AxiosHttpClient(
     process.env.NEXT_PUBLIC_API_BASE_URL || ''
@@ -22,7 +22,8 @@ interface AuthState {
     error: string | null;
 
     // actions
-    login: (payload: LoginDTO) => Promise<void>;
+    login: (payload: LoginDTO, onSuccess: () => void) => Promise<void>;
+    verifyInvite: (payload: VerifyInviteDTO) => Promise<void>;
     logout: () => Promise<void>;
     refreshToken: () => Promise<void>;
     fetchCurrentUser: () => Promise<void>;
@@ -40,7 +41,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             error: null,
 
-            login: async (payload: LoginDTO) => {
+            login: async (payload: LoginDTO, onSuccess: () => void) => {
                 set({ loading: true, error: null });
                 const res = await authService.login(payload);
 
@@ -56,6 +57,7 @@ export const useAuthStore = create<AuthState>()(
                     const { accessToken, refreshToken } = res.data;
                     CookieManager.set({ name: CookieKeys.ACCESS_TOKEN, value: accessToken });
                     CookieManager.set({ name: CookieKeys.REFRESH_TOKEN, value: refreshToken });
+                    onSuccess();
 
                 } else {
                     set({ error: res.message || "Login failed" });
@@ -63,9 +65,25 @@ export const useAuthStore = create<AuthState>()(
                 set({ loading: false });
             },
 
+            verifyInvite: async (payload: VerifyInviteDTO) => {
+                set({ loading: true, error: null });
+                const res = await authService.verifyInvite(payload);
+
+                console.log({ res })
+                if (!res.hasError && res.data) {
+
+                } else {
+                    set({ error: res.message || "Verification failed" });
+                }
+                set({ loading: false });
+            },
+
             logout: async () => {
                 set({ loading: true });
-                await authService.logout();
+                // await authService.logout();
+                CookieManager.delete({ name: CookieKeys.ACCESS_TOKEN });
+                CookieManager.delete({ name: CookieKeys.REFRESH_TOKEN });
+
                 set({
                     token: null,
                     user: null,
@@ -97,7 +115,7 @@ export const useAuthStore = create<AuthState>()(
             clearError: () => set({ error: null }),
         }),
         {
-            name: "auth-storage", // key for persistence
+            name: ZustandKey.AUTH_DATA, // key for persistence
             partialize: (state) => ({
                 token: state.token,
                 user: state.user,

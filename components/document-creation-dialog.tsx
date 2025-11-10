@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -12,208 +12,138 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { FileUpload, UploadedFile } from "./file-upload";
+import { Nanum_Myeongjo } from "next/font/google";
+import { useDocumentsStore } from "@/app/folders/documents/store/documents.store";
+import { toast } from "sonner";
 
-interface TeamMember {
-  id: string
-  name: string
-  email: string
-  role: "admin" | "editor" | "viewer"
-  avatar: string
-}
+export function DocumentCreationDialog({ folderId }: { folderId: string }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
 
-const mockTeamMembers: TeamMember[] = [
-  { id: "1", name: "Sarah Johnson", email: "sarah@company.com", role: "admin", avatar: "SJ" },
-  { id: "2", name: "Mike Chen", email: "mike@company.com", role: "editor", avatar: "MC" },
-  { id: "3", name: "Emma Davis", email: "emma@company.com", role: "editor", avatar: "ED" },
-  { id: "4", name: "Alex Rodriguez", email: "alex@company.com", role: "viewer", avatar: "AR" },
-]
+  const [selectedFile, setSelectedFile] = useState<File | null>();
 
-const documentTypes = ["Document", "Spreadsheet", "Presentation", "Form", "Template"]
+  const { uploadFile, uploading, listFiles } = useDocumentsStore();
 
-export function DocumentCreationDialog() {
-  const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [type, setType] = useState("Document")
-  const [assignedMembers, setAssignedMembers] = useState<string[]>([])
-  const [showMemberList, setShowMemberList] = useState(false)
-
-  const handleAddMember = (memberId: string) => {
-    if (!assignedMembers.includes(memberId)) {
-      setAssignedMembers([...assignedMembers, memberId])
+  const handleUploadDocument = async () => {
+    if (!selectedFile || !name) {
+      toast.error("Please select a file to upload");
+      return;
     }
-    setShowMemberList(false)
-  }
+    if (!name) {
+      toast.error("Please input file name");
+      return;
+    }
 
-  const handleRemoveMember = (memberId: string) => {
-    setAssignedMembers(assignedMembers.filter((id) => id !== memberId))
-  }
+    // Prepare FormData for API
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("fileName", name);
+    formData.append("folderId", folderId);
 
-  const handleCreate = () => {
-    console.log({
-      title,
-      description,
-      type,
-      assignedMembers,
-    })
-    // Reset form
-    setTitle("")
-    setDescription("")
-    setType("Document")
-    setAssignedMembers([])
-    setOpen(false)
-  }
+    toast.promise(uploadFile(formData), {
+      loading: "Uploading document...",
+      description: name,
+      success: async (result) => {
+        await listFiles(); // refresh list after upload
+        setSelectedFile(null);
+        setOpen(false);
+        return "Document uploaded successfully!";
+      },
+      error: "Failed to upload document",
+    });
 
-  const selectedMembers = mockTeamMembers.filter((m) => assignedMembers.includes(m.id))
-  const availableMembers = mockTeamMembers.filter((m) => !assignedMembers.includes(m.id))
+    setOpen(false);
+  };
+
+  // const processFiles = (fileList: File[]) => {
+  //   fileList.forEach((file) => {
+  //     const id = Math.random().toString(36).substr(2, 9);
+  //     const newFile: UploadedFile = {
+  //       id,
+  //       name: file.name,
+  //       size: file.size,
+  //       progress: 0,
+  //       status: "uploading",
+  //     };
+
+  //     // setFiles((prev) => [...prev, newFile]);
+
+  //     // Simulate upload progress
+  //     let progress = 0;
+  //     const interval = setInterval(() => {
+  //       progress += Math.random() * 30;
+  //       if (progress >= 100) {
+  //         progress = 100;
+  //         clearInterval(interval);
+  //         // setFiles((prev) =>
+  //         //   prev.map((f) =>
+  //         //     f.id === id ? { ...f, progress: 100, status: "completed" } : f
+  //         //   )
+  //         // );
+  //       } else {
+  //         // setFiles((prev) =>
+  //         //   prev.map((f) => (f.id === id ? { ...f, progress } : f))
+  //         // );
+  //       }
+  //     }, 500);
+  //   });
+  // };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-accent hover:bg-accent/90">
+        <Button className="gap-2 bg-primary cursor-pointer hover:bg-primary/90">
           <Plus className="w-4 h-4" />
-          Create Document
+          Upload Document
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create New Document</DialogTitle>
-          <DialogDescription>Create a new document and assign it to team members</DialogDescription>
+          <DialogTitle>Upload Document</DialogTitle>
+          <DialogDescription>
+            Upload a new document and keep them organized
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Document Type Selection */}
-          <div className="space-y-3">
-            <label className="text-sm font-semibold text-foreground">Document Type</label>
-            <div className="grid grid-cols-5 gap-2">
-              {documentTypes.map((docType) => (
-                <button
-                  key={docType}
-                  onClick={() => setType(docType)}
-                  className={cn(
-                    "px-3 py-2 rounded-lg border text-sm font-medium transition-all",
-                    type === docType
-                      ? "border-accent bg-accent/10 text-accent"
-                      : "border-border text-muted-foreground hover:border-accent/50",
-                  )}
-                >
-                  {docType}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Title */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground">Title</label>
+            <label className="text-sm font-semibold text-foreground">
+              File Name
+            </label>
             <Input
-              placeholder="Enter document title..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter document name..."
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="bg-secondary/50 border-border/50"
             />
           </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground">Description</label>
-            <Textarea
-              placeholder="Add a description for this document..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="bg-secondary/50 border-border/50 min-h-24"
-            />
-          </div>
-
-          {/* Team Assignment */}
-          <div className="space-y-3">
-            <label className="text-sm font-semibold text-foreground">Assign to Team Members</label>
-
-            {/* Selected Members */}
-            {selectedMembers.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Assigned members ({selectedMembers.length})</p>
-                <div className="space-y-2">
-                  {selectedMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-accent/5 border border-accent/20"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-mono font-semibold text-accent">
-                          {member.avatar}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{member.name}</p>
-                          <p className="text-xs text-muted-foreground">{member.email}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Add Member Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowMemberList(!showMemberList)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-left text-sm hover:border-accent/50 transition-colors"
-              >
-                {availableMembers.length > 0 ? "Add team member..." : "All members assigned"}
-              </button>
-
-              {showMemberList && availableMembers.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
-                  {availableMembers.map((member) => (
-                    <button
-                      key={member.id}
-                      onClick={() => handleAddMember(member.id)}
-                      className="w-full px-4 py-3 text-left hover:bg-accent/5 transition-colors border-b border-border last:border-b-0 flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-mono font-semibold text-accent">
-                          {member.avatar}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{member.name}</p>
-                          <p className="text-xs text-muted-foreground">{member.email}</p>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="opacity-0 group-hover:opacity-100">
-                        {member.role}
-                      </Badge>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <FileUpload onFileSelected={(file) => setSelectedFile(file)} />
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end pt-4 border-t border-border">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+        <div className="grid grid-cols-10 gap-3 justify-end pt-4 border-t border-border">
+          <Button
+            variant="outline"
+            className="w-fit col-span-2"
+            onClick={() => setOpen(false)}
+          >
             Cancel
           </Button>
           <Button
-            onClick={handleCreate}
-            disabled={!title.trim()}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground"
+            onClick={handleUploadDocument}
+            disabled={!name.trim()}
+            className="bg-primary w-full col-span-8 hover:bg-accent/90 text-primary-foreground"
           >
-            Create Document
+            Upload Document
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

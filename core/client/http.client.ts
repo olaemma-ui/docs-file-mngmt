@@ -1,3 +1,4 @@
+
 import { Result } from "./result";
 
 
@@ -19,39 +20,43 @@ export interface HttpRequestConfig {
 export interface IHttpClient {
 
     get<T>(
-        { url, config }: 
-        { url: string; config?: HttpRequestConfig }
+        { url, config }:
+            {
+                url: string;
+                config?: HttpRequestConfig,
+            }
     ): Promise<Result<T>>;
 
     post<T>(
-        { url, data, config }:
-        {
-            url: string;
-            data?: FormData | Record<string, any>;
-            config?: HttpRequestConfig
-        }
+        { url, data, config, onProgress }:
+            {
+                url: string;
+                data?: FormData | Record<string, any>;
+                config?: HttpRequestConfig,
+                onProgress?: (progress: number) => void;
+            }
     ): Promise<Result<T>>;
 
     put<T>(
         { url, data, config }:
-        {
-            url: string;
-            data?: any;
-            config?: HttpRequestConfig
-        }
+            {
+                url: string;
+                data?: any;
+                config?: HttpRequestConfig
+            }
     ): Promise<Result<T>>;
 
     patch<T>(
         { url, data, config }:
-        {
-            url: string;
-            data?: any;
-            config?: HttpRequestConfig
-        }
+            {
+                url: string;
+                data?: any;
+                config?: HttpRequestConfig
+            }
     ): Promise<Result<T>>;
 
     delete<T>(
         { url, config }:
-        {url: string;config?: HttpRequestConfig}
+            { url: string; config?: HttpRequestConfig }
     ): Promise<Result<T>>;
 }

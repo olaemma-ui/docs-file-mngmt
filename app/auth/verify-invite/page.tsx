@@ -1,27 +1,45 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Mail, ArrowRight, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { z } from "zod";
+import { VerifyInviteSchema, VerifyInviteDTO } from "../dto/auth.dto";
+import { useAuthStore } from "../store/auth.store";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Mail, ArrowRight, LockIcon, CheckCircle, Loader } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function VerifyInvitePage() {
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const router = useRouter();
+  const { verifyInvite, loading, error } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
-      setSubmitted(true)
-    }, 1000)
-  }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<VerifyInviteDTO>({
+    resolver: zodResolver(VerifyInviteSchema),
+  });
+
+  const [submitted, setSubmitted] = useState(false);
+
+  const onSubmit = async (data: VerifyInviteDTO) => {
+    try {
+      await verifyInvite(data);
+      setSubmitted(true);
+      if (error) {
+        toast.error(error);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
@@ -31,69 +49,132 @@ export default function VerifyInvitePage() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
             <div className="w-6 h-6 bg-accent rounded-md" />
           </div>
-          <h1 className="text-2xl font-mono font-semibold text-foreground">DocFlow</h1>
+          <h1 className="text-2xl font-mono font-semibold text-foreground">
+            DocFlow
+          </h1>
           <p className="text-sm text-muted-foreground mt-2">Verify Invite</p>
         </div>
 
-        {/* Reset Card */}
-        <Card className="p-6 border border-border/50 backdrop-blur-sm">
+        {/* Verify Card */}
+        <Card className="p-6 shadow-none rounded-4xl border border-border/50 backdrop-blur-sm">
           {!submitted ? (
             <>
-              <h2 className="text-xl font-mono font-semibold text-foreground mb-2">Forgot Password?</h2>
+              <h2 className="text-xl font-mono font-semibold text-foreground mb-2">
+                Verify Invite!
+              </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email and the temporary password sent to your email,
+                set a new password to verify.
               </p>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Email */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Email Address</label>
+                  <label className="text-sm font-medium text-foreground">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="email"
                       placeholder="you@company.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 bg-secondary/50 border-border/50"
+                      {...register("email")}
+                      className={cn(
+                        "pl-10 bg-secondary/50 border-border/50",
+                        errors.email && "border-red-500"
+                      )}
                     />
                   </div>
+                  {errors.email && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.email.message}
+                    </p>
+                  )}
                 </div>
 
+                {/* Temporary Password */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Temporary Password
+                  </label>
+                  <div className="relative">
+                    <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="password"
+                      placeholder="Enter temporary password"
+                      {...register("temporaryPassword")}
+                      className={cn(
+                        "pl-10 bg-secondary/50 border-border/50",
+                        errors.temporaryPassword && "border-red-500"
+                      )}
+                    />
+                  </div>
+                  {errors.temporaryPassword && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.temporaryPassword.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* New Password */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="password"
+                      placeholder="Enter new password"
+                      {...register("password")}
+                      className={cn(
+                        "pl-10 bg-secondary/50 border-border/50",
+                        errors.password && "border-red-500"
+                      )}
+                    />
+                  </div>
+                  {errors.password && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={loading}
                   className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-medium h-10 mt-6"
                 >
-                  {isLoading ? "Sending..." : "Send Reset Link"}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {loading ? "Verifying..." : "Verify Invite"}
+                  {loading ? (
+                    <Loader />
+                  ) : (
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  )}
                 </Button>
               </form>
             </>
           ) : (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-4">
-                <Mail className="w-8 h-8 text-accent" />
+            <div className="text-center py-8 pb-0!">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
+                <CheckCircle className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-mono font-semibold text-foreground mb-2">Check your email</h3>
+              <h3 className="text-lg font-mono font-semibold text-foreground mb-2">
+                Verification Complete
+              </h3>
               <p className="text-sm text-muted-foreground mb-6">
-                We've sent a password reset link to {email}. Click the link to create a new password.
+                Your invite has been verified successfully. You can now log in
+                using your new password.
               </p>
-              <p className="text-xs text-muted-foreground">
-                The link will expire in 24 hours. If you don't see the email, check your spam folder.
-              </p>
+              <Button
+                onClick={() => router.push("/auth/login")}
+                className="bg-primary w-full hover:bg-primary/90 cursor-pointer text-primary-foreground"
+              >
+                Go to Login
+              </Button>
             </div>
           )}
-
-          {/* Back to Login */}
-          <Link
-            href="/auth/login"
-            className="flex items-center justify-center gap-2 text-sm text-accent hover:text-accent/80 mt-6 font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Sign In
-          </Link>
         </Card>
       </div>
     </div>
-  )
+  );
 }

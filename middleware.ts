@@ -2,23 +2,17 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { CookieKeys } from './lib/cookies/cookies.enums';
 
-
-const PUBLIC_PATHS = ['', '/signup', '/public']; // paths that don't need auth
+const PUBLIC_PATHS = ['/auth/login', '/public', '/auth/verify-invite', '/reset-password'];
 
 export function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // Allow public routes
-    if (PUBLIC_PATHS.some((path) => pathname.includes(path))) {
-        return NextResponse.next();
-    }
+    console.log('\x1b[33m%s\x1b[0m', '⚡️ Middleware hit:', pathname);
 
     let token: string | null | undefined = null;
-    // // Check route with alternate key
-    if (pathname.includes('/auth/login')) {
-        token = req.cookies.get(CookieKeys.ACCESS_TOKEN)?.value;
-        if (token) return NextResponse.redirect(new URL('/', req.url));
-    } else if (pathname.includes('/verify-invite')) {
+
+    // Handle special routes with alternate tokens
+    if (pathname.includes('/verify-invite')) {
         token = req.cookies.get(CookieKeys.VERIFICATION_TOKEN)?.value;
     } else if (pathname.includes('/reset-password')) {
         token = req.cookies.get(CookieKeys.PASSWORD_RESET_TOKEN)?.value;
@@ -26,18 +20,27 @@ export function middleware(req: NextRequest) {
         token = req.cookies.get(CookieKeys.ACCESS_TOKEN)?.value;
     }
 
-    console.log('\x1b[33m%s\x1b[0m', '⚡️ Middleware hit:', req.nextUrl.pathname)
+    // --- Handle public or unauthenticated routes ---
+    const isPublic = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 
+    // If user is already logged in and tries to access /auth/login → redirect to home
+    if (pathname.startsWith('/auth/login') && token) {
+        return NextResponse.redirect(new URL('/', req.url));
+    }
 
+    // Allow access to public routes (login, signup, etc.)
+    if (isPublic) {
+        return NextResponse.next();
+    }
 
-    // // Not logged in? Redirect to login
+    // --- Handle protected routes ---
     if (!token) {
         const loginUrl = new URL('/auth/login', req.url);
-        loginUrl.searchParams.set('redirect', pathname); // redirect back after login
+        loginUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(loginUrl);
     }
 
-    // Logged in → allow access
+    // --- Authenticated: allow access ---
     return NextResponse.next();
 }
 
@@ -47,6 +50,6 @@ export function middleware(req: NextRequest) {
  */
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|api/public).*)', // all routes except static files
+        '/((?!_next/static|_next/image|favicon.ico|api/public).*)',
     ],
 };

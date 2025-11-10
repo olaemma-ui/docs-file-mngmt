@@ -1,6 +1,6 @@
-import { IHttpClient } from "@/core/client/http.client"; import { Result } from "../client/result";
+import { IHttpClient } from "@/core/client/http.client"; import { Result } from "../../../../core/client/result";
 
-export interface FileMeta {
+export interface DocumentsMeta {
     id: string;
     name: string;
     size?: number;
@@ -18,14 +18,14 @@ export interface UploadResult {
     [key: string]: any;
 }
 
-export class FileService {
+export class DocumentsService {
     private http: IHttpClient;
 
     constructor(httpClient: IHttpClient) {
         this.http = httpClient;
     }
 
-    async listFiles(folderId?: string, query?: Record<string, any>): Promise<Result<FileMeta[]>> {
+    async listFiles(folderId?: string, query?: Record<string, any>): Promise<Result<DocumentsMeta[]>> {
         let url = "/files";
         const params = new URLSearchParams(query as any || {});
         if (folderId) params.set("folderId", folderId);
@@ -34,20 +34,29 @@ export class FileService {
         return this.http.get({ url });
     }
 
-    async getFile(id: string): Promise<Result<FileMeta>> {
+    async getFile(id: string): Promise<Result<DocumentsMeta>> {
         return this.http.get({ url: `/files/${id}` });
     }
 
     // For upload, we expect the caller to prepare FormData with file and metadata
-    async uploadFile(formData: FormData, config?: any): Promise<Result<UploadResult>> {
-        return this.http.post({ url: "/files/upload", data: formData, config });
+    async uploadFile(
+        formData: FormData,
+        config?: any,
+        onProgress?: (progress: number) => void
+    ): Promise<Result<UploadResult>> {
+        return this.http.post({
+            url: "/files/upload",
+            data: formData,
+            onProgress,
+        });
     }
+
 
     async downloadFile(id: string, config?: any): Promise<Result<Blob>> {
         return this.http.get({ url: `/files/${id}/download`, config });
     }
 
-    async updateFileMetadata(id: string, payload: Partial<FileMeta>): Promise<Result<FileMeta>> {
+    async updateFileMetadata(id: string, payload: Partial<DocumentsMeta>): Promise<Result<DocumentsMeta>> {
         return this.http.patch({ url: `/files/${id}`, data: payload });
     }
 
@@ -63,7 +72,7 @@ export class FileService {
         return this.http.get({ url: `/files/${id}/versions` });
     }
 
-    async revertToVersion(id: string, versionId: string): Promise<Result<FileMeta>> {
+    async revertToVersion(id: string, versionId: string): Promise<Result<DocumentsMeta>> {
         return this.http.post({ url: `/files/${id}/versions/${versionId}/revert` });
     }
 }
