@@ -1,6 +1,6 @@
 import { DocumentVersionsPage } from "./DocumentVersionsPage";
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page() {
   return (
     <DocumentVersionsPage
       params={{
