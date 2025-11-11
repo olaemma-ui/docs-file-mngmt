@@ -33,6 +33,7 @@ interface UsersState {
     assignRole: (id: string, role: string) => Promise<Result<UserEntity> | undefined>;
 }
 
+// 
 export const useUsersStore = create<UsersState>((set, get) => ({
     users: [],
     selectedUser: null,
