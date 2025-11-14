@@ -38,7 +38,7 @@ const navSections: NavSection[] = [
   {
     title: "Main",
     items: [
-      { label: "Dashboard", href: "/", icon: <Home className="w-5 h-5" /> },
+      // { label: "Dashboard", href: "/", icon: <Home className="w-5 h-5" /> },
       // {
       //   label: "Documents",
       //   href: "/documents",
@@ -49,11 +49,11 @@ const navSections: NavSection[] = [
         href: "/folders",
         icon: <Folder className="w-5 h-5" />,
       },
-      {
-        label: "Search",
-        href: "/search",
-        icon: <Search className="w-5 h-5" />,
-      },
+      // {
+      //   label: "Search",
+      //   href: "/search",
+      //   icon: <Search className="w-5 h-5" />,
+      // },
     ],
   },
   {
@@ -63,7 +63,7 @@ const navSections: NavSection[] = [
         label: "My Teams",
         href: "/team",
         icon: <Users className="w-5 h-5" />,
-        roles: [UserRoles.ADMIN, UserRoles.SUPER_ADMIN], // only admin+
+        // roles: [UserRoles.ADMIN, UserRoles.SUPER_ADMIN], // only admin+
       },
     ],
   },
@@ -139,7 +139,7 @@ export function SidebarNav() {
       >
         <div className="p-6 border-b border-sidebar-border">
           <h2 className="text-xl font-mono font-semibold text-sidebar-foreground">
-            DocHub
+            Docka
           </h2>
           <p className="text-xs text-sidebar-foreground/60 mt-1">
             Enterprise Document Management

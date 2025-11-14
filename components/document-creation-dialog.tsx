@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -13,10 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { FileUpload, UploadedFile } from "./file-upload";
-import { Nanum_Myeongjo } from "next/font/google";
 import { useDocumentsStore } from "@/app/folders/documents/store/documents.store";
 import { toast } from "sonner";
 
@@ -58,40 +54,6 @@ export function DocumentCreationDialog({ folderId }: { folderId: string }) {
 
     setOpen(false);
   };
-
-  // const processFiles = (fileList: File[]) => {
-  //   fileList.forEach((file) => {
-  //     const id = Math.random().toString(36).substr(2, 9);
-  //     const newFile: UploadedFile = {
-  //       id,
-  //       name: file.name,
-  //       size: file.size,
-  //       progress: 0,
-  //       status: "uploading",
-  //     };
-
-  //     // setFiles((prev) => [...prev, newFile]);
-
-  //     // Simulate upload progress
-  //     let progress = 0;
-  //     const interval = setInterval(() => {
-  //       progress += Math.random() * 30;
-  //       if (progress >= 100) {
-  //         progress = 100;
-  //         clearInterval(interval);
-  //         // setFiles((prev) =>
-  //         //   prev.map((f) =>
-  //         //     f.id === id ? { ...f, progress: 100, status: "completed" } : f
-  //         //   )
-  //         // );
-  //       } else {
-  //         // setFiles((prev) =>
-  //         //   prev.map((f) => (f.id === id ? { ...f, progress } : f))
-  //         // );
-  //       }
-  //     }, 500);
-  //   });
-  // };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

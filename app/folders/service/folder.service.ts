@@ -39,8 +39,8 @@ export class FolderService {
         return this.http.post({ url: "/folders/create", data: payload });
     }
 
-    async updateFolder(id: string, payload: Partial<CreateFolderDTO & Record<string, any>>): Promise<Result<FolderEntity>> {
-        return this.http.patch({ url: `/folders/${id}`, data: payload });
+    async renameFolder(folderId: string, payload: Partial<CreateFolderDTO & Record<string, any>>): Promise<Result<FolderEntity>> {
+        return this.http.patch({ url: `/folders/rename?folderId=${folderId}`, data: payload });
     }
 
     async deleteFolder(id: string): Promise<Result<null>> {

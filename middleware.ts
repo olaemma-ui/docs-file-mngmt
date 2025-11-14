@@ -25,7 +25,14 @@ export function middleware(req: NextRequest) {
 
     // If user is already logged in and tries to access /auth/login → redirect to home
     if (pathname.startsWith('/auth/login') && token) {
-        return NextResponse.redirect(new URL('/', req.url));
+        return NextResponse.redirect(new URL('/folders', req.url));
+    }
+
+    if (pathname.endsWith('/') && token) {
+        return NextResponse.redirect(new URL('/folders', req.url));
+    }
+    if (pathname.startsWith('/search') && token) {
+        return NextResponse.redirect(new URL('/folders', req.url));
     }
 
     // Allow access to public routes (login, signup, etc.)
@@ -49,7 +56,5 @@ export function middleware(req: NextRequest) {
  * Exclude Next.js internals, assets, etc.
  */
 export const config = {
-    matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|api/public).*)',
-    ],
+    matcher: ['/((?!_next|static|.*\\..*).*)'],
 };

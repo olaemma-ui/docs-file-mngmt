@@ -10,9 +10,11 @@ import { Mail, Lock, ArrowRight, Loader } from "lucide-react";
 import { LoginDTO, LoginSchema } from "../dto/auth.dto";
 import { useAuthStore } from "../store/auth.store";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [field, setField] = useState<LoginDTO>({ email: "", password: "" });
+  const [errors, setErrors] = useState<LoginDTO>({ email: "", password: "" });
   const { login, loading, isAuthenticated, error } = useAuthStore();
 
   const router = useRouter();
@@ -23,36 +25,48 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validate = LoginSchema.safeParse(field);
-    console.log({ validate });
-
-    if (validate.success) {
+    setErrors({ email: "", password: "" });
+    if (validate()) {
       await login(field, () => {
-        router.push("/");
+        router.push("/folders");
       });
       console.log({ isAuthenticated, error });
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-background to-secondary/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
-            <div className="w-6 h-6 bg-accent rounded-md" />
-          </div>
-          <h1 className="text-2xl font-mono font-semibold text-foreground">
-            DocFlow
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            BertAndre Document and File Management
-          </p>
-        </div>
+  const validate = () => {
+    const validation = LoginSchema.safeParse(field);
+    const formattedErrors: Partial<LoginDTO> = {};
+    validation.error?.errors.forEach((error) => {
+      const path = error.path[0] as keyof LoginDTO;
+      formattedErrors[path] = error.message;
+    });
+    setErrors(formattedErrors as LoginDTO);
+    return validation.success;
+  };
 
+  return (
+    <div className="min-h-screen  bg-gradient-to-br from-background via-background to-accent/5 md:grid md:grid-cols-8 flex items-center justify-center p-4-">
+      <div className="bg-primary col-span-4 p-5 h-screen"></div>
+      <div className="w-full max-w-lg mx-auto col-span-4">
         {/* Login Card */}
-        <Card className="p-6 border shadow-none border-border/50 backdrop-blur-sm">
-          <h2 className="text-xl font-mono font-semibold text-foreground m-0">
+        <div className="text- mb-8">
+          <div className="flex w-fit pr-4 bg-accent border rounded-full p-2 items-center gap-2">
+            <Image
+              src={"/logo/logo.png"}
+              alt="Logo"
+              width={300}
+              height={300}
+              className="object-contain rounded-full w-10 h-10"
+            />
+            <h2 className="text-xl font-semibold- text-foreground">Docka</h2>
+          </div>
+          {/* <p className="text-sm text-muted-foreground mt-2">
+            BertAndre Document and File Management
+          </p> */}
+        </div>
+        <Card className="p-6 bg-transparent border-none- shadow-none -border-border/50 backdrop-blur-sm-">
+          <h2 className="text-xl font-mon font-semibold- text-foreground m-0">
             Sign In
             <small className="mb-6 text-[14px] mt-1 block text-black/50">
               BertAndre document and file management portal
@@ -82,6 +96,9 @@ export default function LoginPage() {
                   className="pl-10 bg-secondary/50 border-border/50 focus:border-accent"
                 />
               </div>
+              {errors.email && (
+                <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Password Input */}
@@ -99,6 +116,9 @@ export default function LoginPage() {
                   className="pl-10 bg-secondary/50 border-border/50 focus:border-accent"
                 />
               </div>
+              {errors.password && (
+                <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Remember Me & Forgot Password */}
@@ -122,7 +142,8 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-medium h-10 mt-6"
+              size={"lg"}
+              className="w-full h-11 bg-accent hover:bg-accent/90 text-accent-foreground font-medium mt-6"
             >
               {loading ? "Signing in..." : "Sign In"}
               {loading ? <Loader /> : <ArrowRight className="w-4 h-4 ml-2" />}

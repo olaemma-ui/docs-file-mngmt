@@ -43,28 +43,6 @@ const settings: SettingSection[] = [
     ],
   },
   {
-    title: "Security",
-    description: "Manage your account security settings",
-    icon: <Lock className="w-6 h-6" />,
-    items: [
-      {
-        label: "Two-Factor Authentication",
-        description: "Enable 2FA for added security",
-        value: false,
-      },
-      {
-        label: "Session Timeout",
-        description: "Auto-logout after 30 minutes",
-        value: true,
-      },
-      {
-        label: "Login Alerts",
-        description: "Get notified of new login attempts",
-        value: true,
-      },
-    ],
-  },
-  {
     title: "Appearance",
     description: "Customize your interface",
     icon: <Palette className="w-6 h-6" />,
@@ -82,28 +60,6 @@ const settings: SettingSection[] = [
       {
         label: "Animations",
         description: "Enable interface animations",
-        value: true,
-      },
-    ],
-  },
-  {
-    title: "Data & Privacy",
-    description: "Manage your data and privacy settings",
-    icon: <Database className="w-6 h-6" />,
-    items: [
-      {
-        label: "Data Collection",
-        description: "Allow analytics data collection",
-        value: true,
-      },
-      {
-        label: "Activity Logs",
-        description: "Keep detailed activity logs",
-        value: true,
-      },
-      {
-        label: "Backup Data",
-        description: "Automatic daily backups",
         value: true,
       },
     ],
@@ -172,17 +128,6 @@ export default function SettingsPage() {
               </div>
             </Card>
           ))}
-
-          {/* Danger Zone */}
-          <Card className="p-6 border-destructive/50 bg-destructive/5">
-            <h2 className="text-lg font-mono font-semibold text-destructive mb-4">
-              Danger Zone
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Irreversible actions that require caution
-            </p>
-            <Button variant="destructive">Delete Account</Button>
-          </Card>
         </div>
       </div>
     </main>

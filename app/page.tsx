@@ -15,9 +15,9 @@ export default function Home() {
         <div className="px-4 md:px-8 py-4 md:py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl md:text-3xl font-mono font-semibold text-foreground">
+              <h4 className="text-xl md:text-2xl font-mon font-semibol text-foreground">
                 Dashboard
-              </h1>
+              </h4>
               <p className="text-sm text-muted-foreground mt-1">
                 Welcome back! {"Here's"} your document management overview.
               </p>

@@ -246,7 +246,7 @@ export function FileList({ files }: { files?: DocumentsMeta[] | any }) {
                         <DropdownMenuItem
                           className="gap-2"
                           onClick={() => {
-                            /* share */
+
                           }}
                         >
                           <Share2 className="w-4 h-4" />
@@ -255,7 +255,7 @@ export function FileList({ files }: { files?: DocumentsMeta[] | any }) {
                         <DropdownMenuItem
                           className="gap-2"
                           onClick={() => {
-                            /* rename */
+
                           }}
                         >
                           <Edit2 className="w-4 h-4" />

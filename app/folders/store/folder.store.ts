@@ -5,6 +5,7 @@ import { AxiosHttpClient } from "@/core/client/axios.client";
 import { CreateFolderDTO } from "../dto/create-folder.dto";
 import { FolderEntity } from "../entities/folder.entity";
 import { FolderService } from "../service/folder.service";
+import { toast } from "sonner";
 
 // Pass your HttpClient implementation
 const httpClient: IHttpClient = new AxiosHttpClient(
@@ -23,18 +24,18 @@ interface FolderState {
     listAllFolders: (parentId?: string | null) => Promise<void>;
     getFolder: (id: string) => Promise<void>;
     createFolder: (payload: CreateFolderDTO) => Promise<void>;
-    updateFolder: (id: string, payload: Partial<CreateFolderDTO & Record<string, any>>) => Promise<void>;
+    renameFolder: (id: string, payload: Partial<CreateFolderDTO & Record<string, any>>) => Promise<void>;
     deleteFolder: (id: string) => Promise<void>;
     moveFolder: (id: string, newParentId: string | null) => Promise<void>;
 
-    setCurrentFolder: (FolderEntity: FolderEntity | null) => void;
+    setCurrentFolder: (payload: FolderEntity | null) => void;
     reset: () => void;
 }
 
 export const useFolderStore = create<FolderState>((set, get) => ({
     folders: [],
     currentFolder: null,
-    loading: false,
+    loading: true,
     error: null,
 
     listMyFolders: async (parentId) => {
@@ -65,17 +66,29 @@ export const useFolderStore = create<FolderState>((set, get) => ({
         const res: Result<FolderEntity> = await folderService.createFolder(payload);
         console.log({ res })
         if (!res.hasError) {
+            toast(`Folder created successfully!`, {
+                description: payload.name,
+            });
             set({ folders: [res.data!, ...get().folders], loading: false });
-        } else set({ loading: false, error: res.message });
+        } else {
+            toast.error(res.message);
+            set({ loading: false, error: res.message });
+        }
     },
 
-    updateFolder: async (id, payload) => {
+    renameFolder: async (id, payload) => {
         set({ loading: true, error: null });
-        const res: Result<FolderEntity> = await folderService.updateFolder(id, payload);
+        const res: Result<FolderEntity> = await folderService.renameFolder(id, payload);
         if (!res.hasError) {
+            toast('Folder renamed successfully!', {
+                description: payload.name,
+            });
             const updatedFolders = get().folders.map((f) => (f.id === id ? res.data! : f));
             set({ folders: updatedFolders, loading: false });
-        } else set({ loading: false, error: res.message });
+        } else {
+            toast.error(payload.name, { description: res.message, });
+            set({ loading: false, error: res.message });
+        }
     },
 
     deleteFolder: async (id) => {
@@ -99,5 +112,5 @@ export const useFolderStore = create<FolderState>((set, get) => ({
     setCurrentFolder: (FolderEntity) => set({ currentFolder: FolderEntity }),
 
     reset: () => set({ folders: [], currentFolder: null, error: null }),
-    
+
 }));

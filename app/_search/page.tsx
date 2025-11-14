@@ -56,8 +56,8 @@ export default function SearchPage() {
   const [showResults, setShowResults] = useState(false)
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <SidebarNav />
+    <div className="bg-background">
+      
 
       <main className="flex-1 md:ml-64 transition-all duration-300">
         {/* Header */}

@@ -50,7 +50,7 @@ export default function VerifyInvitePage() {
             <div className="w-6 h-6 bg-accent rounded-md" />
           </div>
           <h1 className="text-2xl font-mono font-semibold text-foreground">
-            DocFlow
+            Docka
           </h1>
           <p className="text-sm text-muted-foreground mt-2">Verify Invite</p>
         </div>

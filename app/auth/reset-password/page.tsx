@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Mail, ArrowRight, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Mail, ArrowRight, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function VerifyInvitePage() {
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     setTimeout(() => {
-      setIsLoading(false)
-      setSubmitted(true)
-    }, 1000)
-  }
+      setIsLoading(false);
+      setSubmitted(true);
+    }, 1000);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
@@ -31,7 +31,9 @@ export default function VerifyInvitePage() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
             <div className="w-6 h-6 bg-accent rounded-md" />
           </div>
-          <h1 className="text-2xl font-mono font-semibold text-foreground">DocFlow</h1>
+          <h1 className="text-2xl font-mono font-semibold text-foreground">
+            Docka
+          </h1>
           <p className="text-sm text-muted-foreground mt-2">Verify Invite</p>
         </div>
 
@@ -39,14 +41,19 @@ export default function VerifyInvitePage() {
         <Card className="p-6 border border-border/50 backdrop-blur-sm">
           {!submitted ? (
             <>
-              <h2 className="text-xl font-mono font-semibold text-foreground mb-2">Forgot Password?</h2>
+              <h2 className="text-xl font-mono font-semibold text-foreground mb-2">
+                Forgot Password?
+              </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we'll send you a link to reset your
+                password.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Email Address</label>
+                  <label className="text-sm font-medium text-foreground">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -74,12 +81,16 @@ export default function VerifyInvitePage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-4">
                 <Mail className="w-8 h-8 text-accent" />
               </div>
-              <h3 className="text-lg font-mono font-semibold text-foreground mb-2">Check your email</h3>
+              <h3 className="text-lg font-mono font-semibold text-foreground mb-2">
+                Check your email
+              </h3>
               <p className="text-sm text-muted-foreground mb-6">
-                We've sent a password reset link to {email}. Click the link to create a new password.
+                We've sent a password reset link to {email}. Click the link to
+                create a new password.
               </p>
               <p className="text-xs text-muted-foreground">
-                The link will expire in 24 hours. If you don't see the email, check your spam folder.
+                The link will expire in 24 hours. If you don't see the email,
+                check your spam folder.
               </p>
             </div>
           )}
@@ -95,5 +106,5 @@ export default function VerifyInvitePage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

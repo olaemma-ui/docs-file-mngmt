@@ -19,8 +19,9 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: "Document Management System",
-  description: "Enterprise document management with version control and RBAC",
-  generator: "v0.app",
+  description: "BertAndre document management with version control and RBAC",
+  generator: "Tejumola Emmanuel Olamide",
+  creator: "Tejumola Emmanuel Olamide",
 };
 
 export default function RootLayout({

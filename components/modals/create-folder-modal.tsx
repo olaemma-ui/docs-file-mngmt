@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,21 +15,42 @@ import { toast } from "sonner";
 
 interface CreateFolderModalProps {
   isOpen: boolean;
+
+  // This is to parse the Id on update cxall
+  isEdit: boolean;
+  folderName?: string;
+  folderId?: string;
+
   onClose: () => void;
   isLoading: boolean;
   errorMessage: string | null;
-  onCreateFolder: (payload: CreateFolderDTO) => Promise<void>;
+  onCreateFolder?: (payload: CreateFolderDTO) => Promise<void>;
+  onRenameFolder?: (
+    folderId: string,
+    payload: CreateFolderDTO
+  ) => Promise<void>;
 }
 
 export function CreateFolderModal({
   isOpen,
+  isEdit,
+  folderName,
+  folderId,
   onClose,
   errorMessage,
   isLoading,
   onCreateFolder,
+  onRenameFolder,
 }: CreateFolderModalProps) {
+  useEffect(() => {
+    if (folderName) {
+      setFields((prev) => ({ ...prev, name: folderName }));
+    }
+  }, [folderName]);
+
+
   const [fields, setFields] = useState<CreateFolderDTO>({
-    name: "",
+    name: folderName ?? "",
     parentId: undefined,
   });
   const [errors, setErrors] = useState<CreateFolderDTO>({
@@ -41,12 +62,13 @@ export function CreateFolderModal({
   };
 
   const handleSubmit = async () => {
+    setErrors({ name: "" });
+    console.log({ fields });
+    console.log({ folderName, folderId });
     if (validate()) {
-      await onCreateFolder(fields);
+      if (isEdit) await onRenameFolder?.(folderId ?? "", fields);
+      else await onCreateFolder?.(fields);
       if (!errorMessage) {
-        toast(fields.name, {
-          description: "Folder created successfully!",
-        });
         onClose();
         setFields({ name: "", parentId: undefined });
         setErrors({ name: "" });
@@ -97,8 +119,8 @@ export function CreateFolderModal({
 
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-mono font-semibold text-foreground">
-                  Create New Folder
+                <h2 className="text-xl font-primary font-semibold text-foreground">
+                  {isEdit ? "Rename Folder" : " Create New Folder"}
                 </h2>
                 <button
                   onClick={() => {
@@ -155,10 +177,12 @@ export function CreateFolderModal({
                   {isLoading ? (
                     <>
                       <Loader className="w-4 h-4 mr-2 animate-spin" />
-                      Creating Folder
+                      {isEdit ? "Renaming Folder" : " Creating Folder"}
                     </>
+                  ) : isEdit ? (
+                    "Rename Folder"
                   ) : (
-                    "Create Folder"
+                    " Create New Folder"
                   )}
                 </Button>
               </div>

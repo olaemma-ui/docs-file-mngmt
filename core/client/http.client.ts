@@ -56,7 +56,7 @@ export interface IHttpClient {
     ): Promise<Result<T>>;
 
     delete<T>(
-        { url, config }:
-            { url: string; config?: HttpRequestConfig }
+        { url, data, config }:
+            { url: string; data?: any; config?: HttpRequestConfig }
     ): Promise<Result<T>>;
 }
