@@ -94,7 +94,9 @@ export class AxiosHttpClient implements IHttpClient {
 
         if (
             (error.response?.status === 401 &&
-                (error.response.data as any).message.toLowerCase().includes("token expired"))
+                (error.response.data as any).message.toLowerCase().includes("token expired")) ||
+            (error.response?.status === 404 &&
+                (error.response.data as any).message.toLowerCase().includes("this user does not exist"))
             || !authData
         ) {
             // Clear local storage and cookies

@@ -23,7 +23,10 @@ interface AuthState {
 
     // actions
     login: (payload: LoginDTO, onSuccess: () => void) => Promise<void>;
-    verifyInvite: (payload: VerifyInviteDTO) => Promise<void>;
+    verifyInvite: (payload: VerifyInviteDTO) => Promise<{
+        success: boolean;
+        message?: string;
+    }>;
     logout: () => Promise<void>;
     refreshToken: () => Promise<void>;
     fetchCurrentUser: () => Promise<void>;
@@ -71,11 +74,12 @@ export const useAuthStore = create<AuthState>()(
 
                 console.log({ res })
                 if (!res.hasError && res.data) {
-
+                    return { success: true };
                 } else {
                     set({ error: res.message || "Verification failed" });
                 }
                 set({ loading: false });
+                return { success: false, message: res.message || "Verification failed" };
             },
 
             logout: async () => {

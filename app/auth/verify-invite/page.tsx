@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { VerifyInviteSchema, VerifyInviteDTO } from "../dto/auth.dto";
@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function VerifyInvitePage() {
   const router = useRouter();
@@ -31,10 +32,10 @@ export default function VerifyInvitePage() {
 
   const onSubmit = async (data: VerifyInviteDTO) => {
     try {
-      await verifyInvite(data);
-      setSubmitted(true);
-      if (error) {
-        toast.error(error);
+      const submit = await verifyInvite(data);
+      setSubmitted(submit.success);
+      if (!submit.success) {
+        toast.error(submit.message || error);
       }
     } catch (err) {
       console.error(err);
@@ -45,16 +46,21 @@ export default function VerifyInvitePage() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 mb-4">
-            <div className="w-6 h-6 bg-accent rounded-md" />
+        <div className="text- mb-8">
+          <div className="flex w-fit pr-4 bg-accent border rounded-full p-2 items-center gap-2">
+            <Image
+              src={"/logo/logo.png"}
+              alt="Logo"
+              width={300}
+              height={300}
+              className="object-contain rounded-full w-10 h-10"
+            />
+            <h2 className="text-xl font-semibold- text-foreground">Docka</h2>
           </div>
-          <h1 className="text-2xl font-mono font-semibold text-foreground">
-            Docka
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2">Verify Invite</p>
+          {/* <p className="text-sm text-muted-foreground mt-2">
+                    BertAndre Document and File Management
+                  </p> */}
         </div>
-
         {/* Verify Card */}
         <Card className="p-6 shadow-none rounded-4xl border border-border/50 backdrop-blur-sm">
           {!submitted ? (
